@@ -60,16 +60,33 @@ log = logging.getLogger("run_backtest")
 ALPACA_KEY    = os.environ.get("ALPACA_KEY",    "PKHWEQLLRWG52N7SUYH3EKTV3Y")
 ALPACA_SECRET = os.environ.get("ALPACA_SECRET", "EF9t8Hx2Hc7h5eqfio6Ena6HP7enC9PopFyMR8a4Bbit")
 
-# Date range for backtest (minimum 3 months, recommend 6-12 months)
-START_DATE = datetime(2024, 1, 1,  tzinfo=timezone.utc)
-END_DATE   = datetime(2024, 10, 1, tzinfo=timezone.utc)
+# Date range -- override via START_DATE env var in CI
+_start_env = os.environ.get("START_DATE", "")
+if _start_env:
+    try:
+        _sd = datetime.strptime(_start_env, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        START_DATE = _sd
+        END_DATE   = datetime.now(timezone.utc).replace(hour=0,minute=0,second=0,microsecond=0)
+    except ValueError:
+        START_DATE = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        END_DATE   = datetime(2024, 10, 1, tzinfo=timezone.utc)
+else:
+    START_DATE = datetime(2024, 1, 1,  tzinfo=timezone.utc)
+    END_DATE   = datetime(2024, 10, 1, tzinfo=timezone.utc)
 
-# Pairs to test (all combinations will be evaluated)
-PAIRS = [
+# Pairs -- override via PAIRS env var: "btc_eth", "btc_sol", "eth_sol", "all"
+_pairs_env = os.environ.get("PAIRS", "all").lower()
+_ALL_PAIRS = [
     ("BTC/USD", "ETH/USD"),
     ("BTC/USD", "SOL/USD"),
     ("ETH/USD", "SOL/USD"),
 ]
+PAIRS = {
+    "btc_eth": [("BTC/USD","ETH/USD")],
+    "btc_sol": [("BTC/USD","SOL/USD")],
+    "eth_sol": [("ETH/USD","SOL/USD")],
+    "all":     _ALL_PAIRS,
+}.get(_pairs_env, _ALL_PAIRS)
 
 # Strategy parameters
 INITIAL_CAPITAL = 10_000.0   # dollars per pair

@@ -1,0 +1,87 @@
+name: Quant Strategy Backtest
+
+on:
+  schedule:
+    - cron: '0 6 * * 0'   # Every Sunday 6am UTC
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: 'Start date YYYY-MM-DD (blank = 2024-01-01)'
+        required: false
+        default: ''
+      pairs:
+        description: 'Pairs: btc_eth | btc_sol | eth_sol | all'
+        required: false
+        default: 'all'
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run test suite
+        run: |
+          export PYTHONPATH=.
+          echo "--- math_guards ---"
+          python -m modules.math_guards   2>&1 | grep "tests passed\|FAILED"
+          echo "--- data_fetcher ---"
+          python -m modules.data_fetcher  2>&1 | grep "tests passed\|FAILED"
+          echo "--- stationarity ---"
+          python -m modules.stationarity  2>&1 | grep "tests passed\|FAILED"
+          echo "--- kalman_filter ---"
+          python -m modules.kalman_filter 2>&1 | grep "tests passed\|FAILED"
+          echo "--- ou_estimator ---"
+          python -m modules.ou_estimator  2>&1 | grep "tests passed\|FAILED"
+          echo "--- hmm_regime ---"
+          python -m modules.hmm_regime    2>&1 | grep "tests passed\|FAILED"
+          echo "--- kelly_sizer ---"
+          python -m modules.kelly_sizer   2>&1 | grep "tests passed\|FAILED"
+          echo "--- backtest ---"
+          python -m modules.backtest      2>&1 | grep "tests passed\|FAILED"
+
+      - name: Run walk-forward backtest
+        env:
+          ALPACA_KEY:    ${{ secrets.ALPACA_KEY }}
+          ALPACA_SECRET: ${{ secrets.ALPACA_SECRET }}
+          PYTHONPATH:    .
+          START_DATE:    ${{ github.event.inputs.start_date }}
+          PAIRS:         ${{ github.event.inputs.pairs || 'all' }}
+        run: python run_backtest.py
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-${{ github.run_number }}
+          path: results/
+          retention-days: 90
+
+      - name: Write job summary
+        if: always()
+        run: |
+          echo "## Backtest Results - Run ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if ls results/*.txt 1>/dev/null 2>&1; then
+            for f in results/*.txt; do
+              echo "### $(basename $f)" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              cat "$f" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            done
+          else
+            echo "No result files found." >> $GITHUB_STEP_SUMMARY
+          fi
