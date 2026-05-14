@@ -274,7 +274,7 @@ class BacktestEngine:
         peak_cap  = capital; max_dd = 0.0
         equity    = [capital]*te
         trades_log: List[Trade] = []; trade_rets: List[float] = []
-        reg_counts = {0:0,1:0,2:0}
+        reg_counts = {0:0, 1:0}
         in_trade  = None
         last_ou   = te; last_hmm = te
 

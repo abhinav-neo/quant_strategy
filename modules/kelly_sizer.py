@@ -337,20 +337,20 @@ def run_unit_tests():
         return p
 
     def valid_regime(state=0):
-        scales = [1.0, 0.5, 0.0]
+        scales = [1.0, 0.0]
         return RegimeState(
             bar=1,
-            gamma=np.eye(3)[state],
-            state=state,
-            kelly_scale=scales[state],
-            is_no_trade=(state==2),
+            gamma=np.eye(2)[min(state,1)],
+            state=min(state,1),
+            kelly_scale=scales[min(state,1)],
+            is_no_trade=(state>=1),
             confidence=1.0,
         )
 
     ou   = valid_ou()
     reg0 = valid_regime(0)   # high-MR, full Kelly
     reg1 = valid_regime(1)   # low-MR,  half Kelly
-    reg2 = valid_regime(2)   # breakdown, no trade
+    reg2 = valid_regime(1)   # no-trade (volatile)
     CAP  = 10_000.0
     ATR  = 50.0             # $50 ATR on BTC
     PRICE = 45_000.0
@@ -365,8 +365,8 @@ def run_unit_tests():
     # ── T02: HMM state=2 -> no trade ─────────────────────────────────────
     log.info("  [T02] HMM breakdown state ...")
     r2 = compute_size(CAP, ou, reg2, ATR, PRICE)
-    check("T02 HMM state=2 -> is_valid=False", not r2.is_valid)
-    check("T02 position_usd = 0",              r2.position_usd == 0.0)
+    check("T02 HMM state=1 -> is_valid=False", not r2.is_valid)
+    check("T02 state=1 position_usd = 0",      r2.position_usd == 0.0)
 
     # ── T03: HMM state=1 -> half Kelly vs state=0 ────────────────────────
     log.info("  [T03] HMM state weighting ...")
