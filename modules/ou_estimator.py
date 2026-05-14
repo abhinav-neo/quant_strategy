@@ -81,7 +81,7 @@ log = logging.getLogger("ou_estimator")
 
 # ── Constants ──────────────────────────────────────────────────────────────
 MIN_SERIES_LENGTH   = 50     # minimum observations for MLE
-MAX_HALF_LIFE_BARS  = 120    # signals with half-life > 2h on 1-min bars are too slow
+MAX_HALF_LIFE_BARS  = 240    # 4 hours max ? raised to allow slower pairs
 MIN_THETA           = 1e-6   # floor on theta (must be positive for OU)
 MIN_SIGMA           = 1e-10  # floor on sigma
 ROLLING_WINDOW      = 500    # bars per rolling estimation window
@@ -369,31 +369,36 @@ def fit_ou_rolling(
 def half_life_scale(params: OUParams) -> float:
     """
     Scale factor based on signal half-life.
-    Prevents over-trading on fast signals (high cost) and
-    under-sizing slow signals (low turnover).
+    Calibrated for real 1-min crypto data where tight pairs
+    (BTC/ETH) have half_life < 1 bar and loose pairs (BTC/SOL)
+    may have half_life up to 200+ bars.
 
-    Half-life buckets (bars at 1-min frequency):
-        < 5  bars  -> 0.50  (too fast, transaction cost risk)
-        5-20 bars  -> 1.00  (sweet spot for 1-min strategy)
-        20-60 bars -> 0.75  (getting slow, reduce size)
-        > 60 bars  -> 0.00  (too slow, skip)
+    Half-life buckets:
+        < 0.3 bars  -> 0.0  (below measurement floor, unreliable)
+        0.3-2 bars  -> 0.50 (sub-minute, reduce size for cost risk)
+        2-30 bars   -> 1.00 (sweet spot: 2min to 30min reversion)
+        30-120 bars -> 0.75 (slow: 30min to 2hr, reduce size)
+        > 120 bars  -> 0.50 (very slow: still tradeable, half size)
+        > 240 bars  -> 0.0  (beyond practical holding window)
 
-    Returns
-    -------
-    float in [0.0, 1.0]
+    Returns float in [0.0, 1.0]
     """
     if not params.is_valid:
         return 0.0
 
     hl = params.half_life
-    if hl < 5.0:
-        return 0.50
-    elif hl <= 20.0:
-        return 1.00
-    elif hl <= 60.0:
-        return 0.75
+    if hl < 0.3:
+        return 0.0    # below measurement floor
+    elif hl < 2.0:
+        return 0.50   # sub-minute: trade but at half size
+    elif hl <= 30.0:
+        return 1.00   # sweet spot
+    elif hl <= 120.0:
+        return 0.75   # getting slow
+    elif hl <= 240.0:
+        return 0.50   # slow but still useful
     else:
-        return 0.0
+        return 0.0    # too slow
 
 
 # ── Bertram optimal entry threshold (analytical) ──────────────────────────
@@ -677,10 +682,10 @@ def run_unit_tests() -> bool:
         p.is_valid = True
         return p
 
-    check("T15 scale: hl=3  -> 0.50", half_life_scale(make_params(3.0))  == 0.50)
+    check("T15 scale: hl=1  -> 0.50", half_life_scale(make_params(1.0))  == 0.50)
     check("T15 scale: hl=10 -> 1.00", half_life_scale(make_params(10.0)) == 1.00)
-    check("T15 scale: hl=30 -> 0.75", half_life_scale(make_params(30.0)) == 0.75)
-    check("T15 scale: hl=70 -> 0.00", half_life_scale(make_params(70.0)) == 0.00)
+    check("T15 scale: hl=60 -> 0.75", half_life_scale(make_params(60.0)) == 0.75)
+    check("T15 scale: hl=250-> 0.00", half_life_scale(make_params(250.0)) == 0.00)
 
     invalid_p = OUParams()
     check("T15 scale: invalid params -> 0.00", half_life_scale(invalid_p) == 0.00)

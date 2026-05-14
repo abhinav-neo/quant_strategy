@@ -78,8 +78,8 @@ STOP_ZSCORE       = 3.5     # emergency stop z-score
 ENTRY_ZSCORE      = 1.5     # enter when |z| > this (replaces Bertram)
 EXIT_ZSCORE       = 0.2     # exit when |z| < this (near mean)
 COST_FRAC         = 0.002   # 0.20% round-trip cost
-MIN_HALF_LIFE     = 2       # bars — ignore signals faster than this
-MAX_HALF_LIFE     = 120     # bars — ignore signals slower than this
+MIN_HALF_LIFE     = 0.3     # bars -- 0.3 min floor for 1-min bars
+MAX_HALF_LIFE     = 240     # bars -- 4 hours max
 ATR_PERIOD        = 14
 
 
