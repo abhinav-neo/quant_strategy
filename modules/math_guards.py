@@ -26,7 +26,7 @@ from typing import Union
 
 log = logging.getLogger("math_guards")
 
-MAX_RATIO         = 999.0
+MAX_RATIO         = 9999.0
 MAX_POSITION_MULT = 0.50
 MIN_PRICE         = 1e-8
 MIN_DENOMINATOR   = 1e-10
@@ -155,6 +155,9 @@ def compute_sharpe(trade_returns, trades_per_year):
     n = len(trade_returns)
     if n < 2:
         return 0.0
+    # Fewer than 5 trades: std dev unreliable -> ratio blows up -> return 0
+    if n < 5:
+        return 0.0
     r   = np.array(trade_returns, dtype=np.float64)
     mu  = float(np.mean(r))
     sig = float(np.std(r, ddof=1))
@@ -172,6 +175,8 @@ def compute_sortino(trade_returns, trades_per_year):
     """
     n = len(trade_returns)
     if n < 2:
+        return 0.0
+    if n < 5:
         return 0.0
     r    = np.array(trade_returns, dtype=np.float64)
     mu   = float(np.mean(r))
@@ -232,8 +237,8 @@ def run_unit_tests():
     check("safeN: NaN -> 0",              safeN(float("nan")) == 0.0)
     check("safeN: Inf -> 0",              safeN(float("inf")) == 0.0)
     check("safeN: -Inf -> 0",             safeN(float("-inf")) == 0.0)
-    check("safeN: >MAX_RATIO -> 0",       safeN(1000.0) == 0.0)
-    check("safeN: exactly MAX_RATIO ok",  safeN(999.0) == 999.0)
+    check("safeN: >MAX_RATIO -> 0",       safeN(10000.0) == 0.0)
+    check("safeN: exactly MAX_RATIO ok",  safeN(9999.0) == 9999.0)
     check("safeN: negative ok",           safeN(-5.0) == -5.0)
     # safe_divide
     check("safe_divide: normal",          safe_divide(10.0, 4.0) == 2.5)

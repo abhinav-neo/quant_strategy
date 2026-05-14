@@ -109,8 +109,10 @@ def _log_gaussian(x: np.ndarray, mu: np.ndarray, sigma: np.ndarray) -> float:
     diff = x - mu
     log_det = np.sum(np.log(2.0 * math.pi * sig * sig))
     maha    = np.sum((diff / sig) ** 2)
-    return safeN(-0.5 * (log_det + maha), fallback=LOG_NEG_INF,
-                 label="log_gaussian")
+    result = -0.5 * (log_det + maha)
+    if not math.isfinite(result):
+        return LOG_NEG_INF
+    return result
 
 
 def _log_emission_matrix(obs: np.ndarray, mu: np.ndarray,
@@ -204,12 +206,23 @@ def _backward(log_A: np.ndarray, log_B: np.ndarray) -> np.ndarray:
 
 # ── Log-space helpers ─────────────────────────────────────────────────────
 def _log_gaussian(x, mu, sigma):
-    """Log diagonal Gaussian: -0.5*sum[log(2pi*s^2) + ((x-mu)/s)^2]"""
+    """
+    Log diagonal Gaussian: -0.5*sum[log(2pi*s^2) + ((x-mu)/s)^2]
+
+    Returns a log-probability in (-inf, 0].
+    MUST NOT use safeN -- log-probabilities are not financial ratios.
+    Valid values like -3400 would be incorrectly zeroed by safeN.
+    Guard only against non-finite output.
+    """
     sig  = np.maximum(sigma, MIN_EMISSION_VAR)
     diff = x - mu
     ld   = np.sum(np.log(2.0 * math.pi * sig * sig))
     mh   = np.sum((diff / sig) ** 2)
-    return safeN(-0.5*(ld+mh), fallback=LOG_NEG_INF, label="log_g")
+    result = -0.5 * (ld + mh)
+    # Only guard against NaN/Inf -- large negative values are valid
+    if not math.isfinite(result):
+        return LOG_NEG_INF
+    return result
 
 def _log_emission_matrix(obs, mu, sigma):
     """Log emission matrix (T,K) for all bars and states."""

@@ -346,7 +346,7 @@ def fit_ou_rolling(
     n       = len(series)
 
     if n < window:
-        log.warning(
+        log.debug(
             f"fit_ou_rolling[{label}]: series length {n} < window {window}. "
             "Fitting single window."
         )
@@ -441,7 +441,7 @@ def bertram_threshold(
     sigma     = params.sigma
 
     if sigma_eq < MIN_DENOMINATOR or sigma < MIN_DENOMINATOR:
-        log.warning("bertram_threshold: sigma_eq or sigma near zero -> fallback")
+        log.debug("bertram_threshold: sigma_eq or sigma near zero -> fallback")
         return fallback
 
     # Cost in spread units: c = cost_frac * current_price_ratio
@@ -482,7 +482,7 @@ def bertram_threshold(
     best_obj = float(obj_vals[best_idx])
 
     if best_obj <= 0.0 or a_star <= c:
-        log.warning(
+        log.debug(
             f"bertram_threshold: no positive objective found -> fallback {fallback:.6f}"
         )
         return fallback
