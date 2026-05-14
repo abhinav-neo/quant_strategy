@@ -203,6 +203,20 @@ def run_pair(fetcher, symbol_a, symbol_b, df_cache):
         log.error(f"Skipping {symbol_a}/{symbol_b} ? data fetch failed")
         return None
 
+    # Cache to CSV so re-runs do not need to re-fetch
+    try:
+        import os
+        cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+        os.makedirs(cache_dir, exist_ok=True)
+        for sym, df in [(symbol_a, df_a), (symbol_b, df_b)]:
+            fname = sym.replace("/", "_") + "_1min.csv"
+            fpath = os.path.join(cache_dir, fname)
+            if not os.path.exists(fpath):
+                df.to_csv(fpath)
+                log.info(f"Cached {len(df):,} bars -> {fpath}")
+    except Exception as e:
+        log.warning(f"Cache save failed (non-fatal): {e}")
+
     # Stationarity check on log-price spread
     log.info(f"Running stationarity tests on {symbol_a}/{symbol_b} spread...")
     try:

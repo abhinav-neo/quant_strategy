@@ -75,6 +75,8 @@ OU_REFIT_EVERY    = 100     # refit OU params every N bars
 HMM_RETRAIN_EVERY = 500     # retrain HMM every N bars (expensive)
 MAX_BARS_HELD     = 60      # time stop: exit after 60 bars (~1 hour)
 STOP_ZSCORE       = 3.5     # emergency stop z-score
+ENTRY_ZSCORE      = 1.5     # enter when |z| > this (replaces Bertram)
+EXIT_ZSCORE       = 0.2     # exit when |z| < this (near mean)
 COST_FRAC         = 0.002   # 0.20% round-trip cost
 MIN_HALF_LIFE     = 2       # bars — ignore signals faster than this
 MAX_HALF_LIFE     = 120     # bars — ignore signals slower than this
@@ -324,8 +326,8 @@ class BacktestEngine:
             if in_trade:
                 in_trade["bars_held"] += 1
                 cap_b = capital; er = None; d = in_trade["dir"]
-                if   d==1  and zscore>=0:                          er="target"
-                elif d==-1 and zscore<=0:                          er="target"
+                if   d==1  and zscore > -EXIT_ZSCORE:              er="target"
+                elif d==-1 and zscore <  EXIT_ZSCORE:              er="target"
                 elif abs(zscore)>STOP_ZSCORE:                      er="emergency"
                 elif d==1  and ks.spread<in_trade["stop_sp"]:      er="stop"
                 elif d==-1 and ks.spread>in_trade["stop_sp"]:      er="stop"
@@ -353,11 +355,11 @@ class BacktestEngine:
             if in_trade is None and not regime.is_no_trade and current_ou.is_valid:
                 hl = current_ou.half_life
                 if MIN_HALF_LIFE<=hl<=MAX_HALF_LIFE and half_life_scale(current_ou)>0:
-                    ar   = bertram_threshold(current_ou, cost_frac=COST_FRAC)
-                    anm  = ar/max(current_ou.sigma_eq, MIN_DENOMINATOR)
+                    # Use fixed z-score entry threshold (dimensionless, robust)
+                    # Bertram threshold in log-price units causes unit mismatch
                     sig  = None
-                    if   zscore < -anm: sig=1
-                    elif zscore >  anm: sig=-1
+                    if   zscore < -ENTRY_ZSCORE: sig=1
+                    elif zscore >  ENTRY_ZSCORE: sig=-1
                     if sig is not None:
                         sz = compute_size(capital=capital, ou_params=current_ou,
                                           regime=regime, atr=float(atr_arr[i]),
