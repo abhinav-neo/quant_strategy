@@ -20,3 +20,4 @@ No floating point result reaches output without passing through math_guards.safe
 ## Capital allocation
 Starting: -
 Target:   25-60% annual return with Sharpe > 1.0
+
