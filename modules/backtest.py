@@ -77,7 +77,15 @@ MAX_BARS_HELD     = 120     # allow up to 2hrs for reversion
 STOP_ZSCORE       = 3.5     # emergency stop z-score
 ENTRY_ZSCORE      = 3.0     # tuned: 68% win rate on real data
 EXIT_ZSCORE       = 0.2     # tuned: tight exit captures more profit
-COST_FRAC         = 0.001   # Alpaca crypto ~0.15% each way
+# COST MODEL - critical to verdict
+# Set REALISTIC for live deployment; OPTIMISTIC only for research/development
+COST_REGIME       = "REALISTIC"    # "REALISTIC" or "OPTIMISTIC"
+if COST_REGIME == "OPTIMISTIC":
+    COST_FRAC     = 0.0010  # tight cost - direct exchange (Kraken pro / Coinbase Prime)
+    SLIPPAGE_FRAC = 0.0000
+else:  # REALISTIC
+    COST_FRAC     = 0.0030  # Alpaca crypto: 0.15% maker per side = 0.30% RT
+    SLIPPAGE_FRAC = 0.0005  # adverse fill at 3-sigma entry (5 bps per side)
 MIN_HALF_LIFE     = 0.3     # BTC/ETH real half_life ~0.5 bars
 MAX_HALF_LIFE     = 240     # bars -- 4 hours max
 ATR_PERIOD        = 14
@@ -337,8 +345,12 @@ class BacktestEngine:
                     e_sp = in_trade["entry_spread"]
                     e_pr = in_trade["entry_price_a"]
                     # Spread is in log-units; change ~= pct return. No /e_pr needed.
+                    # Apply entry slippage: signal at e_sp but filled at slightly worse
+                    # Equivalent to reducing effective spread move by 2*SLIPPAGE
                     raw  = d * (ks.spread - e_sp) * pos
-                    net  = clamp_pnl(raw,pos)-pos*COST_FRAC
+                    # Total cost: maker fees (COST_FRAC) + adverse fill slippage (2 sides)
+                    total_cost = pos * (COST_FRAC + 2 * SLIPPAGE_FRAC)
+                    net  = clamp_pnl(raw, pos) - total_cost
                     capital = validate_capital(capital+net, cap_b)
                     tr = net/max(cap_b,1.0)
                     if math.isfinite(tr) and abs(tr)<1.0: trade_rets.append(tr)
