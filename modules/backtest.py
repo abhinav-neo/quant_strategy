@@ -78,7 +78,7 @@ STOP_ZSCORE       = 3.5     # emergency stop z-score
 ENTRY_ZSCORE      = 2.0     # raised: 1.5 too sensitive, overtraded
 EXIT_ZSCORE       = 0.5     # raised: exit closer to mean
 COST_FRAC         = 0.001   # Alpaca crypto ~0.15% each way
-MIN_HALF_LIFE     = 1.0     # raised: sub-minute not profitable at 0.1% cost
+MIN_HALF_LIFE     = 0.3     # BTC/ETH real half_life ~0.5 bars
 MAX_HALF_LIFE     = 240     # bars -- 4 hours max
 ATR_PERIOD        = 14
 
