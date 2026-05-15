@@ -91,9 +91,9 @@ PAIRS = {
 # Strategy parameters
 INITIAL_CAPITAL = 10_000.0   # dollars per pair
 RISK_PCT        = 0.01        # 1% capital at risk per trade
-TRAIN_BARS      = 2000        # ~33 hours for training window
-TEST_BARS       = 500         # ~8 hours per test window
-STEP_BARS       = 500         # advance by one test window
+TRAIN_BARS      = 3000        # ~50 hours of 1-min data
+TEST_BARS       = 1000        # ~16 hours per test window
+STEP_BARS       = 1000        # advance by one full test window
 
 # Output directory
 RESULTS_DIR = r"E:\MyDevelopment\GitHub\quant_strategy\results"

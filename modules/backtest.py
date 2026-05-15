@@ -70,15 +70,15 @@ from modules.stationarity  import run_all_tests
 log = logging.getLogger("backtest")
 
 # ── Constants ──────────────────────────────────────────────────────────────
-WARMUP_BARS       = 300     # bars before first trade allowed
+WARMUP_BARS       = 500     # more warmup for reliable OU params
 OU_REFIT_EVERY    = 100     # refit OU params every N bars
 HMM_RETRAIN_EVERY = 500     # retrain HMM every N bars (expensive)
-MAX_BARS_HELD     = 60      # time stop: exit after 60 bars (~1 hour)
+MAX_BARS_HELD     = 120     # allow up to 2hrs for reversion
 STOP_ZSCORE       = 3.5     # emergency stop z-score
-ENTRY_ZSCORE      = 1.5     # enter when |z| > this (replaces Bertram)
-EXIT_ZSCORE       = 0.2     # exit when |z| < this (near mean)
-COST_FRAC         = 0.002   # 0.20% round-trip cost
-MIN_HALF_LIFE     = 0.3     # bars -- 0.3 min floor for 1-min bars
+ENTRY_ZSCORE      = 2.0     # raised: 1.5 too sensitive, overtraded
+EXIT_ZSCORE       = 0.5     # raised: exit closer to mean
+COST_FRAC         = 0.001   # Alpaca crypto ~0.15% each way
+MIN_HALF_LIFE     = 1.0     # raised: sub-minute not profitable at 0.1% cost
 MAX_HALF_LIFE     = 240     # bars -- 4 hours max
 ATR_PERIOD        = 14
 

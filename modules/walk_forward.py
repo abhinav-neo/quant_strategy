@@ -48,9 +48,9 @@ from modules.backtest import BacktestEngine, BacktestResult
 log = logging.getLogger("walk_forward")
 
 # ?? Constants ??????????????????????????????????????????????????????????????
-DEFAULT_TRAIN_BARS  = 2000   # ~33 hours of 1-min data for training
-DEFAULT_TEST_BARS   = 500    # ~8 hours of 1-min data per test window
-DEFAULT_STEP_BARS   = 500    # advance by one test window each iteration
+DEFAULT_TRAIN_BARS  = 3000   # ~50hrs training (was 2000)
+DEFAULT_TEST_BARS   = 1000   # ~16hrs per test window (was 500)
+DEFAULT_STEP_BARS   = 1000   # advance by one full test window
 MIN_WINDOWS         = 3      # minimum windows to draw conclusions
 SHARPE_DEPLOY_THRESHOLD = 0.5
 SHARPE_STRONG_THRESHOLD = 1.0

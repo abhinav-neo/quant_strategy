@@ -84,8 +84,8 @@ MIN_SERIES_LENGTH   = 50     # minimum observations for MLE
 MAX_HALF_LIFE_BARS  = 240    # 4 hours max ? raised to allow slower pairs
 MIN_THETA           = 1e-6   # floor on theta (must be positive for OU)
 MIN_SIGMA           = 1e-10  # floor on sigma
-ROLLING_WINDOW      = 500    # bars per rolling estimation window
-ROLLING_STEP        = 100    # bars to advance each roll
+ROLLING_WINDOW      = 1000   # raised: larger window for stable MLE
+ROLLING_STEP        = 200    # step between refits
 
 
 # ── Result dataclass ───────────────────────────────────────────────────────
