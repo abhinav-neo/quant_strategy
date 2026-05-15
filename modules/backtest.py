@@ -71,7 +71,7 @@ log = logging.getLogger("backtest")
 
 # ── Constants ──────────────────────────────────────────────────────────────
 WARMUP_BARS       = 500     # more warmup for reliable OU params
-OU_REFIT_EVERY    = 100     # refit OU params every N bars
+OU_REFIT_EVERY    = 500     # refit OU every 500 bars (was 100)
 HMM_RETRAIN_EVERY = 500     # retrain HMM every N bars (expensive)
 MAX_BARS_HELD     = 120     # allow up to 2hrs for reversion
 STOP_ZSCORE       = 3.5     # emergency stop z-score

@@ -39,9 +39,9 @@ log = logging.getLogger("kelly_sizer")
 
 MAX_KELLY        = 0.25
 MAX_POS_FRAC     = 0.30
-MIN_POS_FRAC     = 0.005
+MIN_POS_FRAC     = 0.001   # $10 min on $10k capital
 DEFAULT_RISK_PCT = 0.01
-COST_FRAC        = 0.002
+COST_FRAC        = 0.001   # MUST match backtest.COST_FRAC
 
 
 @dataclass
