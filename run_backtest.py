@@ -217,12 +217,19 @@ def run_pair(fetcher, symbol_a, symbol_b, df_cache):
     except Exception as e:
         log.warning(f"Cache save failed (non-fatal): {e}")
 
-    # Stationarity check on log-price spread
-    log.info(f"Running stationarity tests on {symbol_a}/{symbol_b} spread...")
+    # Stationarity check -- subsample to 10k bars to keep test fast
+    # Walk-forward handles per-window stationarity properly anyway
+    log.info(f"Running stationarity tests (10k sample) on {symbol_a}/{symbol_b} spread...")
     try:
         common = df_a.index.intersection(df_b.index)
-        lp_a   = np.log(df_a.loc[common, "close"].values)
-        lp_b   = np.log(df_b.loc[common, "close"].values)
+        # Subsample if series is huge
+        if len(common) > 10_000:
+            step = len(common) // 10_000
+            common_sample = common[::step]
+        else:
+            common_sample = common
+        lp_a   = np.log(df_a.loc[common_sample, "close"].values)
+        lp_b   = np.log(df_b.loc[common_sample, "close"].values)
         # Simple static beta estimate for stationarity test
         from numpy.linalg import lstsq
         X     = np.column_stack([lp_b, np.ones(len(lp_b))])
