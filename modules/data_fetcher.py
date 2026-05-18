@@ -37,7 +37,16 @@ from modules.math_guards import log_return as mg_log_return, safeN
 log = logging.getLogger("data_fetcher")
 
 # ── Constants ──────────────────────────────────────────────────────────────
-SUPPORTED_SYMBOLS      = ["BTC/USD", "ETH/USD", "SOL/USD"]
+SUPPORTED_SYMBOLS      = [
+    "BTC/USD", "ETH/USD", "SOL/USD",
+    "LTC/USD", "BCH/USD", "AVAX/USD",
+    "LINK/USD", "UNI/USD", "DOGE/USD",
+    "AAVE/USD", "XTZ/USD", "DOT/USD",
+    "SHIB/USD", "MKR/USD", "GRT/USD",
+    "BAT/USD", "CRV/USD", "YFI/USD",
+    "SUSHI/USD", "XRP/USD", "PEPE/USD",
+    "TRUMP/USD",
+]
 MIN_BARS_REQUIRED      = 10_000
 SPIKE_THRESHOLD        = 0.20   # |log_return| per bar
 MAX_RETRIES            = 3
