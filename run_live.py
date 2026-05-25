@@ -366,4 +366,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+        sys.exit(0)    # clean shutdown — auto_restart.bat will NOT restart
+    except Exception as e:
+        log.exception("UNHANDLED EXCEPTION: %s", e)
+        sys.exit(1)    # crash — auto_restart.bat WILL restart after 30s
